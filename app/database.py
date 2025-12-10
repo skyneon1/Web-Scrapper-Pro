@@ -1,45 +1,37 @@
-from sqlalchemy import create_engine, Column, String, DateTime, Integer, Boolean, Text, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./scraper.db")
+load_dotenv()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
-)
+# Use environment variable for MongoDB connection, fallback to local
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "webscraper_pro")
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+class Database:
+    client: AsyncIOMotorClient = None
+    db = None
 
+db = Database()
 
-class ScrapeJobModel(Base):
-    __tablename__ = "scrape_jobs"
-    
-    job_id = Column(String, primary_key=True, index=True)
-    url = Column(String, index=True)
-    selectors = Column(JSON, nullable=True)
-    use_playwright = Column(Boolean, default=False)
-    wait_time = Column(Integer, default=5)
-    status = Column(String, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    completed_at = Column(DateTime, nullable=True)
-    error = Column(Text, nullable=True)
-    result_data = Column(JSON, nullable=True)
-
-
-def init_db():
-    """Initialize database tables"""
-    Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    """Get database session"""
-    db = SessionLocal()
+async def connect_to_mongo():
+    """Connect to MongoDB"""
     try:
-        yield db
-    finally:
-        db.close()
+        db.client = AsyncIOMotorClient(MONGODB_URL)
+        db.db = db.client[DATABASE_NAME]
+        print("Connected to MongoDB")
+    except Exception as e:
+        print(f"Could not connect to MongoDB: {e}")
 
+async def close_mongo_connection():
+    """Close MongoDB connection"""
+    try:
+        if db.client:
+            db.client.close()
+            print("MongoDB connection closed")
+    except Exception as e:
+        print(f"Error closing MongoDB connection: {e}")
+
+def get_database():
+    """Get database instance"""
+    return db.db

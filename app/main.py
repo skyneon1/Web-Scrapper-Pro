@@ -16,6 +16,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from app.database import connect_to_mongo, close_mongo_connection
+
+@app.on_event("startup")
+async def startup_db_client():
+    await connect_to_mongo()
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    await close_mongo_connection()
+
 # CORS middleware
 # Get allowed origins from environment or use wildcard for development
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]

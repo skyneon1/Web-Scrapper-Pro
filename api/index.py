@@ -1,7 +1,6 @@
 """
 Vercel serverless function entry point for FastAPI
 """
-from mangum import Mangum
 import sys
 import os
 
@@ -11,6 +10,4 @@ sys.path.insert(0, parent_dir)
 
 from app.main import app
 
-# Wrap FastAPI app with Mangum for Vercel serverless compatibility
-handler = Mangum(app, lifespan="off")
 
