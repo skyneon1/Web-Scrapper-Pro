@@ -23,12 +23,21 @@ scraper = WebScraper()
 
 def save_result(job_id: str, result: dict):
     """Save scraping result to file"""
-    results_dir = os.getenv("RESULTS_DIR", "results")
-    os.makedirs(results_dir, exist_ok=True)
-    
-    file_path = os.path.join(results_dir, f"{job_id}.json")
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+    # Use /tmp for Vercel/Serverless environments
+    if os.environ.get("VERCEL") or os.access("/", os.W_OK) is False:
+        results_dir = os.path.join("/tmp", "results")
+    else:
+        results_dir = os.getenv("RESULTS_DIR", "results")
+        
+    try:
+        os.makedirs(results_dir, exist_ok=True)
+        file_path = os.path.join(results_dir, f"{job_id}.json")
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Warning: Could not save result to disk: {e}")
+        # Continue execution even if save fails
+        pass
 
 
 def run_scrape_job(job_id: str, url: str, selectors: List[str] = None, 
