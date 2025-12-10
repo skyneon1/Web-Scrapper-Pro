@@ -67,9 +67,10 @@ WebScrapper/
 │   ├── src/
 │   └── package.json
 ├── vercel.json              # Vercel configuration
-├── requirements.txt         # Python dependencies (full, for local dev)
-├── requirements-vercel.txt  # Python dependencies (without Playwright, for Vercel)
-└── vercel-build.py          # Build script to prepare for Vercel
+├── requirements.txt         # Python dependencies (lite, for Vercel)
+├── requirements-local.txt   # Python dependencies (full, for local dev)
+├── requirements-vercel.txt  # Copy of lite requirements (legacy)
+└── vercel-build.py          # Build script (no longer strictly needed but kept)
 ```
 
 ## How It Works
@@ -98,9 +99,8 @@ All API endpoints are available at:
 ## Troubleshooting
 
 ### Build Fails with "Serverless Function exceeded 250 MB"
-- This is fixed! The build automatically uses `requirements-vercel.txt` which excludes Playwright
-- If you still see this error, check that `vercel-build.py` is running correctly
-- Playwright browser binaries are excluded via `.vercelignore`
+- This should be fixed! The `requirements.txt` now excludes Playwright by default.
+- For local development with full features, install from `requirements-local.txt`: `pip install -r requirements-local.txt`
 
 ### Build Fails
 - Check that all dependencies are in `requirements.txt` or `requirements-vercel.txt`
