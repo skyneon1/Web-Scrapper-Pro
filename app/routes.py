@@ -100,11 +100,14 @@ def run_scrape_job_bg(job_id: str, url: str, selectors: List[str] = None,
             )
 
     # Fire and forget async wrapper
-    # In Vercel serverless, background tasks might be cut off if function returns.
-    # However, for FastApi on Vercel, awaitable background tasks are tricky.
-    # We will try to run this. If Vercel kills it, we need a queue (Redis/SQS).
-    # For now, we assume simple usage.
-    asyncio.run(_async_run())
+    # Using asyncio.create_task() schedules the coroutine on the current loop
+    # without blocking the response.
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(_async_run())
+    except RuntimeError:
+        # Fallback if no loop running (unlikely in FastAPI) or other loop issue
+        asyncio.run(_async_run())
 
 @router.post("/scrape", response_model=dict)
 async def create_scrape_job(request: ScrapeRequest, background_tasks: BackgroundTasks):
