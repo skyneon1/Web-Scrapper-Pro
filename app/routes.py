@@ -24,90 +24,76 @@ def serialize_doc(doc):
     doc["_id"] = str(doc["_id"])
     return doc
 
-def run_scrape_job_bg(job_id: str, url: str, selectors: List[str] = None, 
-                      use_playwright: bool = False, wait_time: int = 5,
-                      crawl_site: bool = False, max_pages: int = 10):
-    """Wrapper to run scrape job in background - updated for MongoDB"""
-    # Note: verify if we can access asyncio loop here or if we need sync wrapper
-    # Since this is a background task, we might need a new loop or use run_in_executor
+async def run_scrape_job_bg(job_id: str, url: str, selectors: List[str] = None, 
+                            use_playwright: bool = False, wait_time: int = 5,
+                            crawl_site: bool = False, max_pages: int = 10):
+    """Async background task to run scrape job - updated for MongoDB"""
     import asyncio
     
-    async def _async_run():
-        db = get_database()
-        if db is None:
-             # If db connection failed, we can't do much. 
-             # In production, we'd want robust error handling here.
-             return
+    db = get_database()
+    if db is None:
+        # If db connection failed, we can't do much
+        return
 
-        try:
-            # Update status to running
-            await db.jobs.update_one(
-                {"job_id": job_id},
-                {"$set": {"status": ScrapeJobStatus.RUNNING}}
-            )
-            
-            start_time = datetime.now()
-            
-            # Run blocking scraper in executor to avoid blocking event loop
-            loop = asyncio.get_event_loop()
-            result_data = await loop.run_in_executor(
-                None, 
-                lambda: scraper.scrape(
-                    url=url,
-                    selectors=selectors,
-                    use_playwright=use_playwright,
-                    wait_time=wait_time,
-                    crawl_site=crawl_site,
-                    max_pages=max_pages
-                )
-            )
-            
-            completed_at = datetime.now()
-            duration = (completed_at - start_time).total_seconds()
-            
-            result_record = {
-                "job_id": job_id,
-                "url": url,
-                "status": ScrapeJobStatus.COMPLETED,
-                "data": result_data,
-                "error": None,
-                "completed_at": completed_at.isoformat(),
-                "duration_seconds": duration
-            }
-            
-            # Update job
-            await db.jobs.update_one(
-                {"job_id": job_id},
-                {"$set": {
-                    "status": ScrapeJobStatus.COMPLETED,
-                    "completed_at": completed_at.isoformat(),
-                    "duration_seconds": duration,
-                    "result": result_record
-                }}
-            )
-            
-        except Exception as e:
-            completed_at = datetime.now()
-            error_msg = str(e)
-            
-            await db.jobs.update_one(
-                {"job_id": job_id},
-                {"$set": {
-                    "status": ScrapeJobStatus.FAILED,
-                    "error": error_msg,
-                    "completed_at": completed_at.isoformat()
-                }}
-            )
-
-    # Fire and forget async wrapper
-    # Using asyncio.create_task() schedules the coroutine on the current loop
-    # without blocking the response.
     try:
-        loop = asyncio.get_running_loop()
-        loop.create_task(_async_run())
-    except RuntimeError:
-        # Fallback if no loop running (unlikely in FastAPI) or other loop issue
-        asyncio.run(_async_run())
+        # Update status to running
+        await db.jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {"status": ScrapeJobStatus.RUNNING}}
+        )
+        
+        start_time = datetime.now()
+        
+        # Run blocking scraper in executor to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        result_data = await loop.run_in_executor(
+            None, 
+            lambda: scraper.scrape(
+                url=url,
+                selectors=selectors,
+                use_playwright=use_playwright,
+                wait_time=wait_time,
+                crawl_site=crawl_site,
+                max_pages=max_pages
+            )
+        )
+        
+        completed_at = datetime.now()
+        duration = (completed_at - start_time).total_seconds()
+        
+        result_record = {
+            "job_id": job_id,
+            "url": url,
+            "status": ScrapeJobStatus.COMPLETED,
+            "data": result_data,
+            "error": None,
+            "completed_at": completed_at.isoformat(),
+            "duration_seconds": duration
+        }
+        
+        # Update job
+        await db.jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {
+                "status": ScrapeJobStatus.COMPLETED,
+                "completed_at": completed_at.isoformat(),
+                "duration_seconds": duration,
+                "result": result_record
+            }}
+        )
+        
+    except Exception as e:
+        completed_at = datetime.now()
+        error_msg = str(e)
+        
+        await db.jobs.update_one(
+            {"job_id": job_id},
+            {"$set": {
+                "status": ScrapeJobStatus.FAILED,
+                "error": error_msg,
+                "completed_at": completed_at.isoformat()
+            }}
+        )
 
 @router.post("/scrape", response_model=dict)
 async def create_scrape_job(request: ScrapeRequest, background_tasks: BackgroundTasks):
