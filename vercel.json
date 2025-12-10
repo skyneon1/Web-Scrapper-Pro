@@ -1,12 +1,18 @@
 {
   "version": 2,
-  "buildCommand": "python vercel-build.py || cp requirements-vercel.txt requirements.txt 2>/dev/null || true",
   "builds": [
     {
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "250mb"
+      }
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
       }
     }
   ],
@@ -16,12 +22,7 @@
       "dest": "/api/index.py"
     },
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|svg|woff|woff2|ttf|eot))",
-      "dest": "/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
