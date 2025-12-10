@@ -42,7 +42,7 @@ Add these environment variables in Vercel dashboard:
    - `REACT_APP_API_URL`: Leave empty (will use relative paths)
    - `ALLOWED_ORIGINS`: Your Vercel domain (e.g., `https://your-app.vercel.app`)
    - `RESULTS_DIR`: `/tmp/results` (or leave default if using MongoDB)
-   - `MONGODB_URL`: `mongodb+srv://aniket:aniket@cluster0.2d6fwhp.mongodb.net/?retryWrites=true&w=majority`
+   - `MONGODB_URL`: `mongodb+srv://id:pass@cluster0.2d6fwhp.mongodb.net/?retryWrites=true&w=majority`
    - `DATABASE_NAME`: `webscraper_pro`
 
 ### Step 4: Deploy
