@@ -24,7 +24,6 @@ import {
   Download,
   Speed,
   Security,
-  Code,
   DataObject,
   CheckCircle,
   ArrowForward,
@@ -245,7 +244,7 @@ function Home() {
                   View Dashboard
                 </Button>
               </Stack>
-              
+
               {/* Stats */}
               <Stack direction="row" spacing={4} sx={{ mt: 4 }}>
                 <Box>
