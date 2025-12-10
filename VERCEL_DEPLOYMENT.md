@@ -66,8 +66,10 @@ WebScrapper/
 ├── frontend/         # React frontend
 │   ├── src/
 │   └── package.json
-├── vercel.json       # Vercel configuration
-└── requirements.txt  # Python dependencies
+├── vercel.json              # Vercel configuration
+├── requirements.txt         # Python dependencies (full, for local dev)
+├── requirements-vercel.txt  # Python dependencies (without Playwright, for Vercel)
+└── vercel-build.py          # Build script to prepare for Vercel
 ```
 
 ## How It Works
@@ -90,13 +92,18 @@ All API endpoints are available at:
 1. **Serverless Functions**: Each API endpoint runs as a separate serverless function
 2. **Cold Starts**: First request may be slower due to serverless cold starts
 3. **Time Limits**: Vercel serverless functions have execution time limits (10s for Hobby, 60s for Pro)
-4. **Playwright**: May not work in serverless environment - consider using a different service for Playwright scraping
+4. **Playwright**: Excluded from Vercel deployment due to size limitations (250MB limit). The app will gracefully handle Playwright requests by returning an error message. For local development, Playwright works normally.
 5. **File Storage**: Results are stored in memory (in-memory storage). For production, use a database or file storage service
 
 ## Troubleshooting
 
+### Build Fails with "Serverless Function exceeded 250 MB"
+- This is fixed! The build automatically uses `requirements-vercel.txt` which excludes Playwright
+- If you still see this error, check that `vercel-build.py` is running correctly
+- Playwright browser binaries are excluded via `.vercelignore`
+
 ### Build Fails
-- Check that all dependencies are in `requirements.txt`
+- Check that all dependencies are in `requirements.txt` or `requirements-vercel.txt`
 - Ensure `mangum` is installed
 - Check build logs in Vercel dashboard
 

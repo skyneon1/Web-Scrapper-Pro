@@ -5,9 +5,16 @@ import time
 import os
 import re
 from urllib.parse import urljoin, urlparse, urlunparse
-from playwright.sync_api import sync_playwright
 import json
 from collections import defaultdict
+
+# Optional Playwright import for Vercel compatibility
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    sync_playwright = None
 
 
 class WebScraper:
@@ -314,6 +321,9 @@ class WebScraper:
         Returns:
             Dictionary containing scraped data
         """
+        if not PLAYWRIGHT_AVAILABLE:
+            raise Exception("Playwright is not available. It may not be installed or is not supported in this environment (e.g., Vercel serverless).")
+        
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)

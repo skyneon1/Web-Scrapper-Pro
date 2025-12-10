@@ -17,4 +17,8 @@ frontend/build/
 *.db
 *.sqlite
 *.sqlite3
+# Exclude Playwright browser binaries (too large for Vercel)
+**/playwright/
+**/.playwright/
+**/ms-playwright/
 
