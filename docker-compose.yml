@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web-scraper:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./results:/app/results
+      - ./static:/app/static
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - RESULTS_DIR=results
+    restart: unless-stopped
+
