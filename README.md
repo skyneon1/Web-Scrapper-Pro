@@ -2,6 +2,8 @@
 
 A full-featured web scraping application with a modern React frontend and FastAPI backend, deployable on Vercel.
 
+https://web-scrapper-pro-eight.vercel.app
+
 ## Features
 
 - 🎯 **Dashboard**: Real-time statistics and overview with 3D visualizations
